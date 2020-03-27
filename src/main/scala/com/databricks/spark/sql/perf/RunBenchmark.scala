@@ -24,7 +24,7 @@ import org.apache.spark.{SparkContext, SparkConf}
 import scala.util.Try
 
 case class RunConfig(
-    master: String = "local[*]",
+    master: String = "spark://10.10.1.1:7077",
     benchmarkName: String = null,
     filter: Option[String] = None,
     iterations: Int = 3,
@@ -69,11 +69,25 @@ object RunBenchmark {
     val conf = new SparkConf()
       .setMaster(config.master)
       .setAppName(getClass.getName)
+    // conf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
+    conf.set("spark.executor.extraJavaOptions","-Djava.io.tmpdir=/mydata/tmp")
+    conf.set("spark.driver.extraJavaOptions","-Djava.io.tmpdir=/mydata/tmp")
+    conf.set("spark.local.dir","/mydata/tmp")
+    conf.set("spark.executor.memory","25g")
+    conf.set("spark.driver.memory","20g")
+    conf.set("spark.eventLog.dir","hdfs://10.10.1.1:9000/sparklog")
+    conf.set("spark.eventLog.enabled","true")
+    // conf.set("spark.ui.enabled","false")
+    conf.set("spark.default.parallelism","40")
+    conf.set("spark.shuffle.sort.bypassMergeThreshold", "20")
+
 
     val sparkSession = SparkSession.builder.config(conf).getOrCreate()
     val sc = sparkSession.sparkContext
     val sqlContext = sparkSession.sqlContext
     import sqlContext.implicits._
+
+    
 
     sqlContext.setConf("spark.sql.perf.results",
       new File("performance").toURI.toString)

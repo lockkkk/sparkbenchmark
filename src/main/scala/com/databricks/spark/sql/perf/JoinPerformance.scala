@@ -21,15 +21,21 @@ class JoinPerformance extends Benchmark {
   val joinTables = Seq(
     Table(
       "100milints", {  // 143.542mb, 10 files
-        val df = sqlContext.range(0, 100000000).repartition(10)
+        val df = sqlContext.range(0, 100000000)
         df.createTempView("100milints")
+        val a = df.rdd.getNumPartitions
+        println("Hello!!!!!!!!!!!!!!!!!!!!")
+        printf("Number1 = %d", a)
         df
       }),
 
     Table(
-      "1bilints", {  // 143.542mb, 10 files
-        val df = sqlContext.range(0, 1000000000).repartition(10)
+      "1bilints", {  // 1430.542mb, 10 files
+        val df = sqlContext.range(0, 1000000000)
         df.createTempView("1bilints")
+        val a = df.rdd.getNumPartitions
+        println("Hello?????????????????????????????")
+        printf("Number2 = %d", a)
         df
       }
     )
@@ -40,9 +46,9 @@ class JoinPerformance extends Benchmark {
     case "on" => sqlContext.setConf("spark.sql.planner.sortMergeJoin", "true")
   }
 
-  val singleKeyJoins: Seq[Benchmarkable] = Seq("1milints", "100milints", "1bilints").flatMap { table1 =>
-    Seq("1milints", "100milints", "1bilints").flatMap { table2 =>
-      Seq("JOIN", "RIGHT JOIN", "LEFT JOIN", "FULL OUTER JOIN").map { join =>
+  val singleKeyJoins: Seq[Benchmarkable] = Seq( "100milints").flatMap { table1 =>
+    Seq("1bilints").flatMap { table2 =>
+      Seq("JOIN").map { join =>
         Query(
           s"singleKey-$join-$table1-$table2",
           s"SELECT COUNT(*) FROM $table1 a $join $table2 b ON a.id = b.id",
